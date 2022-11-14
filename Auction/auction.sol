@@ -26,20 +26,15 @@ contract Auction {
         address payable walletSeller;
     }
 
-     struct Payment {
+     struct Balance {
         uint amount;
         string message;
     }
 
-    struct Balance {
-        uint totalPayments;
-        mapping(uint => Payment) payments;
-    }
+     mapping(address => Balance) balances;
 
-     mapping(address => Balance)  balances;
-     
-    function getPayment(address _addr, uint _index) public onlyOwner view returns(Payment memory) {
-        return balances[_addr].payments[_index];
+    function getPayment(address _addr) public onlyOwner view returns(Balance memory) {
+        return balances[_addr];
     }
 
     ItemData[] public itemsdata;
@@ -88,15 +83,13 @@ contract Auction {
             addressWinner = msg.sender;
         }
 
-
-        uint paymentNum = balances[msg.sender].totalPayments;
-        balances[msg.sender].totalPayments++;
-        Payment memory newPayment = Payment(
+        Balance memory newBalance = Balance(
             msg.value,
             message
         );
 
-        balances[msg.sender].payments[paymentNum] = newPayment;
+        balances[msg.sender].amount += msg.value;
+        
     
     }
 
