@@ -3,7 +3,12 @@
 pragma solidity ^0.8.0;
 
 contract Auction {
+    // Повертає кошти тим, хто не переіг в аукціоні
+    // Таблиця лідерів
     address public owner;
+    uint highestRate;
+    address addressWinner;
+    bool public stop;
 
     constructor() {
         owner = msg.sender;
@@ -33,7 +38,7 @@ contract Auction {
         mapping(uint => Payment) payments;
     }
 
-     mapping(address => Balance) public balances;
+     mapping(address => Balance)  balances;
      
     function getPayment(address _addr, uint _index) public onlyOwner view returns(Payment memory) {
         return balances[_addr].payments[_index];
@@ -41,11 +46,14 @@ contract Auction {
 
     ItemData[] public itemsdata;
 
-    bool public stop;
+   function showWinner() public view returns(uint, address) {
+       return(highestRate, addressWinner);
+   }
 
-    function withdrawAll(address payable _to) public onlyOwner {
-         _to.transfer(address(this).balance);
-        }
+
+   function withdrawAll(address payable _to) public onlyOwner {
+        _to.transfer(address(this).balance);
+    }
 
     function newItem(string memory _name, uint _price) external {
         ItemData memory newItemData = ItemData({
@@ -69,7 +77,7 @@ contract Auction {
         ItemData memory cItemData = itemsdata[index];
         uint cPrice = getPriceFor(index);
         uint maxPrice = cPrice * 20;
-        require(msg.value > cPrice, " low bid ");
+        require(msg.value > cPrice && msg.value > highestRate, " low bid ");
         require(msg.value <= maxPrice, "max price!");
         if (stop == true) {
            revert ("Auction stopped");
@@ -77,6 +85,11 @@ contract Auction {
         if (msg.value == maxPrice) {
             stop = true;
         }
+        if (msg.value > highestRate) {
+            highestRate = msg.value;
+            addressWinner = msg.sender;
+        }
+
 
         uint paymentNum = balances[msg.sender].totalPayments;
         balances[msg.sender].totalPayments++;
@@ -90,10 +103,8 @@ contract Auction {
     }
 
     function stopAuction(uint index) external onlyOwner {
-        ItemData memory cItemData = itemsdata[index];
-        uint cPrice = getPriceFor(index);
         stop = true;
-        emit AuctionEnded(index, cPrice, msg.sender);
+        emit AuctionEnded(index, highestRate, addressWinner);
     }
 
     function showAllCost(uint index) public onlyOwner view returns(uint) {
