@@ -39,7 +39,7 @@ contract Auction {
 
     ItemData[] public itemsdata;
 
-   function showWinner() public view returns(uint, address) {
+   function showLeader() public view returns(uint, address) {
        return(highestRate, addressWinner);
    }
 
