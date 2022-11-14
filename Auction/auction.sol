@@ -3,8 +3,6 @@
 pragma solidity ^0.8.0;
 
 contract Auction {
-    // Повертає кошти тим, хто не переіг в аукціоні
-    // Таблиця лідерів
     address public owner;
     uint highestRate;
     address addressWinner;
