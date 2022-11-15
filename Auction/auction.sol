@@ -69,16 +69,9 @@ contract Auction {
     function buy(uint index, string memory message) public payable {
         ItemData memory cItemData = itemsdata[index];
         uint cPrice = getPriceFor(index);
-        uint maxPrice = cPrice * 20;
-        require(msg.value > cPrice && msg.value > highestRate, " low bid ");
-        require(msg.value <= maxPrice, "max price!");
+        require(msg.value >= cPrice && msg.value >= highestRate, " low bid ");
         cItemData.walletSeller.transfer(cPrice);
-        if (stop == true) {
-           revert ("Auction stopped");
-        }
-        if (msg.value == maxPrice) {
-            stop = true;
-        }
+        require(stop != true, "Auction stopped!");
         if (msg.value > highestRate) {
             highestRate = msg.value;
             addressWinner = msg.sender;
