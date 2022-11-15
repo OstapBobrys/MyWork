@@ -46,8 +46,6 @@ const HDWalletProvider = require('@truffle/hdwallet-provider');
 // const { MNEMONIC, PROJECT_ID } = process.env;
 
 // const HDWalletProvider = require('@truffle/hdwallet-provider');
-
-// const private_keys = fdf58643b07e511563dcbb42b8388c85c5f667160a4138d0aa32074f957c923b
   
 
 
@@ -88,7 +86,7 @@ module.exports = {
     // Useful for deploying to a public network.
     // Note: It's important to wrap the provider as a function to ensure truffle uses a new provider every time.
     goerli: {
-      provider: () => new HDWalletProvider("fdf58643b07e511563dcbb42b8388c85c5f667160a4138d0aa32074f957c923b", `https://goerli.infura.io/v3/eaf58b9842e84a38a47593473502e1af`),
+      provider: () => new HDWalletProvider("proces.env.PRIVATE_KEY", `https://goerli.infura.io/v3/eaf58b9842e84a38a47593473502e1af`),
       network_id: 5,       // Goerli's id
       confirmations: 2,    // # of confirmations to wait between deployments. (default: 0)
       timeoutBlocks: 200,  // # of blocks before a deployment times out  (minimum/default: 50)
