@@ -51,8 +51,29 @@ describe("Auction", function () {
             const cItemData = await auct.itemsdata(0)
             const finalPrice = await auct.highestRate()
             await expect(() => buyTx).to.changeEtherBalance(seller, finalPrice)
-
         })
+    })
+    it("stop auction", async function() {
+        await auct.connect(seller).newItem(
+            "Puma",
+            ethers.utils.parseEther("0.00001")
+            )
+
+            this.timeout(5000) // 5s
+            await delay(1000)
+
+        const buyTx = await auct.connect(buyer).
+        buy(0,"Hello", {value: ethers.utils.parseEther("0.00001")})
+        const cItemData = await auct.itemsdata(0)
+        const finalPrice = await auct.highestRate()
+        await expect(() => buyTx).to.changeEtherBalance(seller, finalPrice)
+
+        const stopTx = await auct.connect(owner).stopAuction(0)
+        const stopBool = await auct.stop()
+        expect(stopBool).to.eq(true)
+        await expect(stopTx)
+        .to.emit(auct, 'AuctionEnded')
+        .withArgs(0, finalPrice, buyer.address)
     })
 
 })
