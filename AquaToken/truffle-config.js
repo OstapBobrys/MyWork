@@ -86,7 +86,7 @@ module.exports = {
     // Useful for deploying to a public network.
     // Note: It's important to wrap the provider as a function to ensure truffle uses a new provider every time.
     goerli: {
-      provider: () => new HDWalletProvider("proces.env.PRIVATE_KEY", `https://goerli.infura.io/v3/eaf58b9842e84a38a47593473502e1af`),
+      provider: () => new HDWalletProvider("process.env.PRIVATE_KEY", `https://goerli.infura.io/v3/eaf58b9842e84a38a47593473502e1af`),
       network_id: 5,       // Goerli's id
       confirmations: 2,    // # of confirmations to wait between deployments. (default: 0)
       timeoutBlocks: 200,  // # of blocks before a deployment times out  (minimum/default: 50)
