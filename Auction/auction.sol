@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 contract Auction {
     address public owner;
-    uint highestRate;
+    uint public highestRate;
     address addressWinner;
     bool public stop;
 
@@ -72,6 +72,7 @@ contract Auction {
         uint maxPrice = cPrice * 20;
         require(msg.value > cPrice && msg.value > highestRate, " low bid ");
         require(msg.value <= maxPrice, "max price!");
+        cItemData.walletSeller.transfer(cPrice);
         if (stop == true) {
            revert ("Auction stopped");
         }
