@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 contract Auction {
     address public owner;
     uint public highestRate;
-    address addressWinner;
+    address public addressWinner;
     bool public stop;
 
     constructor() {
@@ -13,7 +13,7 @@ contract Auction {
     }
 
     modifier onlyOwner() {
-        require(owner == msg.sender, "Now an owner");
+        require(owner == msg.sender, "Not an owner");
         _;
     }
 
@@ -31,16 +31,16 @@ contract Auction {
         string message;
     }
 
-     mapping(address => Balance) balances;
+     mapping(address => Balance) public balances;
 
-    function getPayment(address _addr) public onlyOwner view returns(Balance memory) {
-        return balances[_addr];
+    function getPayment(address _addr) public onlyOwner view returns(uint) {
+        return balances[_addr].amount;
     }
 
     ItemData[] public itemsdata;
 
-   function showLeader() public view returns(uint, address) {
-       return(highestRate, addressWinner);
+   function showLeader() public view returns(address) {
+       return addressWinner;
    }
 
 
