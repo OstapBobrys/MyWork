@@ -5,15 +5,18 @@ pragma solidity ^0.8.0;
 contract Transfers {
     struct Transfer {
         uint amount;
-        uint timestamp;
         address sender;
     }
 
-    Transfer[] transfers;
+    event Send(address _from, uint _amount);
 
-    address owner;
-    uint8 maxTransfers;
-    uint8 currentTransfers;
+    Transfer[] public transfers;
+
+    mapping(uint => Transfer) public transferCount;
+
+    address public owner;
+    uint8 public  maxTransfers;
+    uint8 public currentTransfers;
 
     constructor(uint8 _maxTransfers) {
         owner = msg.sender;
@@ -21,12 +24,11 @@ contract Transfers {
     }
 
     function getTransfer(uint _index) public view returns(Transfer memory) {
-        require(_index < transfers.length, "Cannot find this transfer.");
-        return transfers[_index];
+        return transferCount[_index];
     }
 
     modifier requireOwner() {
-        require(owner == msg.sender, "Not and owner");
+        require(owner == msg.sender, "Not an owner");
         _;
     }
 
@@ -38,10 +40,10 @@ contract Transfers {
         if(currentTransfers >= maxTransfers) {
             revert("Cannot accept more transfers");
         }
-        Transfer memory newTransfer = Transfer(msg.value, block.timestamp, msg.sender);
-
-        transfers.push(newTransfer);
         currentTransfers++;
+        transferCount[currentTransfers] = Transfer(msg.value, msg.sender); 
+
+        emit Send(msg.sender, msg.value);
     }
 
 }
