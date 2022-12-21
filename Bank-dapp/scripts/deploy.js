@@ -1,49 +1,39 @@
-const { ethers } = require("hardhat");
+const { ethers } = require('hardhat');
+
+const str2Bytes32 = ethers.utils.formatBytes32String;
+
+const deploy = async (name, deployer, ...args) => {
+  const factory = await ethers.getContractFactory(name, deployer);
+  const contract = await factory.deploy(...args);
+  await contract.deployed();
+  console.log(`${name} deployed to: ${contract.address} by ${deployer.address}`);
+  return contract;
+};
 
 async function main() {
-    [deployer] = await ethers.getSigners();
+  const [deployer] = await ethers.getSigners();
 
-    const Bank = await ethers.getContractFactory("Bank", deployer);
-    const bankContract = await Bank.deploy()
+  const Bank = await deploy('Bank', deployer);
+  const Matic = await deploy('Matic', deployer);
+  const Shib = await deploy('Shib', deployer);
+  const Usdt = await deploy('Usdt', deployer);
 
-    const Matic = await ethers.getContractFactory("Matic", deployer);
-    const maticContract = await Matic.deploy()
-    const Shib = await ethers.getContractFactory("Shib", deployer);
-    const shiba = await Shib.deploy()
-    const Usdt = await ethers.getContractFactory("Usdt", deployer);
-    const usdtContract = await Usdt.deploy()
+  const whitelist = [
+    { symbol: 'Matic', address: Matic.address },
+    { symbol: 'Shib', address: Shib.address },
+    { symbol: 'Usdt', address: Usdt.address },
+    { symbol: 'Eth', address: '0x4B7ee45f30767F36f06F79B32BF1FCa6f726DEda' },
+  ];
 
-    await bankContract.deployed()
-    await maticContract.deployed()
-    await shiba.deployed()
-    await usdtContract.deployed()
+  const add2Whitelist = ({ symbol, address }) => Bank.whitelistToken(str2Bytes32(symbol), address);
 
-    await bankContract.whitelistToken(
-        ethers.utils.formatBytes32String('Matic'),
-        maticContract.address
-    );
-    await bankContract.whitelistToken(
-        ethers.utils.formatBytes32String('Shib'),
-        shiba.address
-    );
-    await bankContract.whitelistToken(
-        ethers.utils.formatBytes32String('Usdt'),
-        usdtContract.address
-    );
-    await bankContract.whitelistToken(
-        ethers.utils.formatBytes32String('Eth'),
-        '0x4B7ee45f30767F36f06F79B32BF1FCa6f726DEda'
-    )
-
-    console.log("Bank deployed to:", bankContract.address, "by", deployer.address)
-    console.log("Matic deployed to:", maticContract.address, "by", deployer.address)
-    console.log("Shib deployed to:", shiba.address, "by", deployer.address)
-    console.log("Usdt deployed to:", usdtContract.address, "by", deployer.address)
+  await Promise.all(whitelist.map(add2Whitelist));
 }
 
 main()
-    .then(() => process.exit(0))
-    .catch((error) => {
-        console.error(error);
-        process.exit(1);
-    });
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+
