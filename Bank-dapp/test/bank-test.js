@@ -1,6 +1,8 @@
 const { expect } = require('chai');
 const { ethers } = require('hardhat');
 
+const tokenJSON = require("../src/artifacts/@openzeppelin/contracts/token/ERC20/ERC20.sol/ERC20.json")
+
 const str2Bytes32 = ethers.utils.formatBytes32String;
 
 const deploy = async (name, deployer, ...args) => {
@@ -11,15 +13,21 @@ const deploy = async (name, deployer, ...args) => {
 };
 
 describe('Bank', function () {
-  let owner;
+  let deployer;
+  let user;
+
   let Bank;
   let Matic;
   let Shib;
   let Usdt;
-  let deployer;
+  let maticERC20
+
+  let id1
+  let id2
+  let id3
 
   beforeEach(async function () {
-    [owner, deployer] = await ethers.getSigners();
+    [user, deployer] = await ethers.getSigners();
 
     Bank = await deploy('Bank', deployer);
     Matic = await deploy('Matic', deployer);
@@ -36,6 +44,12 @@ describe('Bank', function () {
     const add2Whitelist = ({ id, address }) => Bank.whitelistToken(str2Bytes32(id), address);
 
     await Promise.all(whitelist.map(add2Whitelist));
+
+    maticERC20 = new ethers.Contract(Matic.address, tokenJSON.abi, deployer)
+
+    id1 = str2Bytes32('Matic');
+    id2 = str2Bytes32('Shib');
+    id3 = str2Bytes32('Usdt');
   });
 
   describe('Check tokens data', async function () {
@@ -55,19 +69,65 @@ describe('Bank', function () {
 
   describe('Check filled whitelist', async function () {
     it(`Correct Matic address`, async function () {
-      const id = str2Bytes32('Matic');
-      expect(await Bank.whitelistedSymbols(0)).to.eq(id);
-      expect(await Bank.whitlistedTokens(id)).to.eq(Matic.address);
+      expect(await Bank.whitelistedSymbols(0)).to.eq(id1);
+      expect(await Bank.whitlistedTokens(id1)).to.eq(Matic.address);
     });
     it(`Correct Shib data`, async function () {
-      const id = str2Bytes32('Shib');
-      expect(await Bank.whitelistedSymbols(1)).to.eq(id);
-      expect(await Bank.whitlistedTokens(id)).to.eq(Shib.address);
+      expect(await Bank.whitelistedSymbols(1)).to.eq(id2);
+      expect(await Bank.whitlistedTokens(id2)).to.eq(Shib.address);
     });
     it(`Correct Usdt data`, async function () {
-      const id = str2Bytes32('Usdt');
-      expect(await Bank.whitelistedSymbols(2)).to.eq(id);
-      expect(await Bank.whitlistedTokens(id)).to.eq(Usdt.address);
+      expect(await Bank.whitelistedSymbols(2)).to.eq(id3);
+      expect(await Bank.whitlistedTokens(id3)).to.eq(Usdt.address);
     });
+    it('Allows only owner', async function() {
+      await expect(
+        Bank.connect(user).
+        whitelistToken(id1, Matic.address)
+        ).to.be.revertedWith("Ownable: caller is not the owner")
+    })
   });
+
+  describe('Correct bank functional', async function() {
+    it('Correct tokens balance', async function () {
+      const approval = await maticERC20.approve(Bank.address, 5000)
+      await approval.wait()
+      await Bank.depositTokens(500, id1)
+      expect(await Bank.getTokenBalance(id1)).to.eq(500);
+    })
+    it('Correct whitelisted symbols', async function() {
+      const tokens = await Bank.getWhitelistedSymbols()
+      expect(tokens[0]).to.eq(id1)
+      expect(tokens[1]).to.eq(id2)
+      expect(tokens[2]).to.eq(id3)
+    })
+    it('Correct token address', async function() {
+      const tokenAddress = await Bank.getWhitelistedTokenAddress(id1)
+      expect(tokenAddress).to.eq(Matic.address)
+    });
+
+  describe('Allows withdraw', async function() {
+    it('Allows withdraw Eth', async function() {
+      const tx = await deployer.sendTransaction({
+        value: 8,
+        to: Bank.address
+    })
+    await tx.wait()
+    const withdrawEth = await Bank.withdrawEther(1)
+    await withdrawEth.wait()
+    await expect(
+      Bank.withdrawEther(8)
+      ).to.be.revertedWith("Not enough funds")
+  })
+    it('Allows withdraw tokens', async function() {
+    const approval = await maticERC20.approve(Bank.address, 5000)
+    await approval.wait()
+    await Bank.depositTokens(2500, id1)
+    await Bank.withdrawTokens(2000, id1)
+    await expect(
+      Bank.withdrawTokens(1000, id1)
+      ).to.be.revertedWith("Not enough funds")
+    })  
 });
+})
+})
